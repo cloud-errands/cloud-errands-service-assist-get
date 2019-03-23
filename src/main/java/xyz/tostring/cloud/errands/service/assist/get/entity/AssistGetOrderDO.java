@@ -26,7 +26,11 @@ public class AssistGetOrderDO {
     @Column
     private String expressSerialNum;
     @Column
-    private Double expressWeight;
+    private Integer expressWeightLevel;
+    @Column
+    private Date expressArriveDate;
+    @Column
+    private String expressType;
     @Column
     private Double orderSum;
     @Column
@@ -102,12 +106,28 @@ public class AssistGetOrderDO {
         this.expressSerialNum = expressSerialNum;
     }
 
-    public Double getExpressWeight() {
-        return expressWeight;
+    public Integer getExpressWeightLevel() {
+        return expressWeightLevel;
     }
 
-    public void setExpressWeight(Double expressWeight) {
-        this.expressWeight = expressWeight;
+    public void setExpressWeightLevel(Integer expressWeightLevel) {
+        this.expressWeightLevel = expressWeightLevel;
+    }
+
+    public Date getExpressArriveDate() {
+        return expressArriveDate;
+    }
+
+    public void setExpressArriveDate(Date expressArriveDate) {
+        this.expressArriveDate = expressArriveDate;
+    }
+
+    public String getExpressType() {
+        return expressType;
+    }
+
+    public void setExpressType(String expressType) {
+        this.expressType = expressType;
     }
 
     public Double getOrderSum() {

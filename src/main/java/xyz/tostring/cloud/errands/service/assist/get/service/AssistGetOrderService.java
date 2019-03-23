@@ -5,7 +5,8 @@ import xyz.tostring.cloud.errands.service.assist.get.entity.AssistGetOrderDO;
 import java.util.List;
 
 public interface AssistGetOrderService {
-    void save(AssistGetOrderDO assistGetOrderDO);
+    AssistGetOrderDO createOrder(AssistGetOrderDO assistGetOrderDO);
+    AssistGetOrderDO paySuccess(AssistGetOrderDO assistGetOrderDO);
     List<AssistGetOrderDO> listAll();
     List<AssistGetOrderDO> listByUserOpenId(String UserOpenId);
     List<AssistGetOrderDO> listByUserOpenIdAndPayStatusYes(String userOpenId);

@@ -6,6 +6,7 @@ import xyz.tostring.cloud.errands.common.dto.BaseResult;
 import xyz.tostring.cloud.errands.service.assist.get.entity.AssistGetOrderDO;
 import xyz.tostring.cloud.errands.service.assist.get.service.AssistGetOrderService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -15,11 +16,28 @@ public class AssistGetOrderController {
     @Autowired
     private AssistGetOrderService assistGetOrderService;
 
-    @PostMapping("/")
-    public BaseResult save(AssistGetOrderDO assistGetOrderDO) {
-        assistGetOrderService.save(assistGetOrderDO);
+    @PostMapping("/create")
+    public BaseResult create(@RequestBody AssistGetOrderDO assistGetOrderDO) {
+        assistGetOrderDO = assistGetOrderService.createOrder(assistGetOrderDO);
         BaseResult baseResult = new BaseResult();
-        return baseResult.ok();
+        return baseResult.ok(assistGetOrderDO);
+    }
+
+    @PostMapping("/pay-success")
+    public BaseResult paySuccess(@RequestBody AssistGetOrderDO assistGetOrderDO) {
+        assistGetOrderService.paySuccess(assistGetOrderDO);
+        AssistGetOrderDO assistGetOrderDO1 = assistGetOrderService.paySuccess(assistGetOrderDO);
+        BaseResult baseResult = new BaseResult();
+        if (assistGetOrderDO1 != null) {
+            return baseResult.ok(assistGetOrderDO1);
+        } else {
+            BaseResult.Error error = new BaseResult.Error();
+            error.setField("id not exist.");
+            error.setMessage("错误请求");
+            List<BaseResult.Error> errors = new ArrayList<>();
+            errors.add(error);
+            return baseResult.notOk(errors);
+        }
     }
 
     @GetMapping("/list")
