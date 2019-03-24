@@ -12,9 +12,12 @@ public interface AssistGetOrderDao extends JpaRepository<AssistGetOrderDO, Long>
 
     List<AssistGetOrderDO> findAllByUserOpenIdOrderByLatestUpdateTimeDesc(String userOpenId);
 
-    List<AssistGetOrderDO> findAllByPayStatusOrderByLatestUpdateTimeAsc(Integer buyStatus);
+    List<AssistGetOrderDO> findAllByOrderStatusOrderByLatestUpdateTimeAsc(Integer buyStatus);
 
-    List<AssistGetOrderDO> findAllByPayStatusOrderByLatestUpdateTimeDesc(Integer buyStatus);
+    List<AssistGetOrderDO> findAllByOrderStatusOrderByLatestUpdateTimeDesc(Integer buyStatus);
 
-    List<AssistGetOrderDO> findAllByUserOpenIdAndPayStatusOrderByLatestUpdateTimeDesc(String userOpenId, Integer buyStatus);
+    List<AssistGetOrderDO> findAllByUserOpenIdAndOrderStatusOrderByLatestUpdateTimeDesc(String userOpenId, Integer buyStatus);
+
+    List<AssistGetOrderDO> findAllByUserOpenIdAndOrderStatusOrderByLatestUpdateTimeAsc(String userOpenId, Integer buyStatus);
+
 }

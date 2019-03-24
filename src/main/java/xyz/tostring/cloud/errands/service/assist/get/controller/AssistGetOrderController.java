@@ -6,7 +6,6 @@ import xyz.tostring.cloud.errands.common.dto.BaseResult;
 import xyz.tostring.cloud.errands.service.assist.get.entity.AssistGetOrderDO;
 import xyz.tostring.cloud.errands.service.assist.get.service.AssistGetOrderService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -16,75 +15,100 @@ public class AssistGetOrderController {
     @Autowired
     private AssistGetOrderService assistGetOrderService;
 
-    @PostMapping("/create")
+    @PostMapping("create")
     public BaseResult create(@RequestBody AssistGetOrderDO assistGetOrderDO) {
         assistGetOrderDO = assistGetOrderService.createOrder(assistGetOrderDO);
         BaseResult baseResult = new BaseResult();
         return baseResult.ok(assistGetOrderDO);
     }
 
-    @PostMapping("/pay-success")
-    public BaseResult paySuccess(@RequestBody AssistGetOrderDO assistGetOrderDO) {
-        assistGetOrderService.paySuccess(assistGetOrderDO);
-        AssistGetOrderDO assistGetOrderDO1 = assistGetOrderService.paySuccess(assistGetOrderDO);
+    @PostMapping("payment")
+    public BaseResult payment(@RequestBody AssistGetOrderDO assistGetOrderDO) {
+        assistGetOrderDO = assistGetOrderService.paySuccess(assistGetOrderDO);
         BaseResult baseResult = new BaseResult();
-        if (assistGetOrderDO1 != null) {
-            return baseResult.ok(assistGetOrderDO1);
-        } else {
-            BaseResult.Error error = new BaseResult.Error();
-            error.setField("id not exist.");
-            error.setMessage("错误请求");
-            List<BaseResult.Error> errors = new ArrayList<>();
-            errors.add(error);
-            return baseResult.notOk(errors);
-        }
+        return baseResult.ok(assistGetOrderDO);
     }
 
-    @GetMapping("/list")
+    @PostMapping("finish")
+    private BaseResult finish(@RequestBody AssistGetOrderDO assistGetOrderDO) {
+        assistGetOrderDO = assistGetOrderService.orderFinish(assistGetOrderDO);
+        BaseResult baseResult = new BaseResult();
+        return baseResult.ok(assistGetOrderDO);
+    }
+
+    @GetMapping("list")
     public BaseResult listAll() {
         List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listAll();
         BaseResult baseResult = new BaseResult();
         return baseResult.ok(assistGetOrderDOList);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("{id}")
     public BaseResult getById(@PathVariable("id") Long id) {
         AssistGetOrderDO assistGetOrderDO = assistGetOrderService.getById(id);
         BaseResult baseResult = new BaseResult();
         return baseResult.ok(assistGetOrderDO);
     }
 
-    @GetMapping("/list/{userOpenId}")
+    @GetMapping("list/{userOpenId}")
     public BaseResult listByUserOpenId(@PathVariable("userOpenId") String userOpenId) {
         List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByUserOpenId(userOpenId);
         BaseResult baseResult = new BaseResult();
         return baseResult.ok(assistGetOrderDOList);
     }
 
-    @GetMapping("/list/{userOpenId}/yes")
-    public BaseResult listByUserOpenIdAndPayStatusYes(@PathVariable("userOpenId") String userOpenId) {
-        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByUserOpenIdAndPayStatusYes(userOpenId);
+    @GetMapping("list/payment/{userOpenId}")
+    public BaseResult listByUserOpenIdAndPayment(@PathVariable("userOpenId") String userOpenId) {
+        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByUserOpenIdAndPayment(userOpenId);
         BaseResult baseResult = new BaseResult();
         return baseResult.ok(assistGetOrderDOList);
     }
 
-    @GetMapping("/list/{userOpenId}/not")
-    public BaseResult listByUserOpenIdAndPayStatusNot(@PathVariable("userOpenId") String userOpenId) {
-        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByUserOpenIdAndPayStatusNot(userOpenId);
+    @GetMapping("list/not-payment/{userOpenId}")
+    public BaseResult listByUserOpenIdAndNotPayment(@PathVariable("userOpenId") String userOpenId) {
+        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByUserOpenIdAndNotPayment(userOpenId);
         BaseResult baseResult = new BaseResult();
         return baseResult.ok(assistGetOrderDOList);
     }
 
-    @GetMapping("/list/yes")
+    @GetMapping("list/closed/{userOpenId}")
+    public BaseResult listByUserOpenIdAndClosed(@PathVariable("userOpenId") String userOpenId) {
+        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByUserOpenIdAndClosed(userOpenId);
+        BaseResult baseResult = new BaseResult();
+        return baseResult.ok(assistGetOrderDOList);
+    }
+
+    @GetMapping("list/finished/{userOpenId}")
+    public BaseResult listByUserOpenIdAndFinished(@PathVariable("userOpenId") String userOpenId) {
+        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByUserOpenIdAndFinished(userOpenId);
+        BaseResult baseResult = new BaseResult();
+        return baseResult.ok(assistGetOrderDOList);
+    }
+
+    @GetMapping("list/payment")
     public BaseResult listByPayStatusYes() {
-        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByPayStatusYes();
+        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByPayment();
         BaseResult baseResult = new BaseResult();
         return baseResult.ok(assistGetOrderDOList);
     }
 
-    @GetMapping("/list/not")
+    @GetMapping("/list/not-payment")
     public BaseResult listByPayStatusNot() {
-        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByPayStatusNot();
+        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByNotPayment();
+        BaseResult baseResult = new BaseResult();
+        return baseResult.ok(assistGetOrderDOList);
+    }
+
+    @GetMapping("list/closed")
+    public BaseResult listByClosed() {
+        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByClosed();
+        BaseResult baseResult = new BaseResult();
+        return baseResult.ok(assistGetOrderDOList);
+    }
+
+    @GetMapping("list/finished")
+    public BaseResult listByFinished() {
+        List<AssistGetOrderDO> assistGetOrderDOList = assistGetOrderService.listByFinished();
         BaseResult baseResult = new BaseResult();
         return baseResult.ok(assistGetOrderDOList);
     }

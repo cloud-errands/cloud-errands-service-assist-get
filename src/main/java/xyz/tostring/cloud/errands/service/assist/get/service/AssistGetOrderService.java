@@ -7,11 +7,16 @@ import java.util.List;
 public interface AssistGetOrderService {
     AssistGetOrderDO createOrder(AssistGetOrderDO assistGetOrderDO);
     AssistGetOrderDO paySuccess(AssistGetOrderDO assistGetOrderDO);
+    AssistGetOrderDO orderFinish(AssistGetOrderDO assistGetOrderDO);
     List<AssistGetOrderDO> listAll();
     List<AssistGetOrderDO> listByUserOpenId(String UserOpenId);
-    List<AssistGetOrderDO> listByUserOpenIdAndPayStatusYes(String userOpenId);
-    List<AssistGetOrderDO> listByUserOpenIdAndPayStatusNot(String userOpenId);
-    List<AssistGetOrderDO> listByPayStatusNot();
-    List<AssistGetOrderDO> listByPayStatusYes();
+    List<AssistGetOrderDO> listByUserOpenIdAndPayment(String userOpenId);
+    List<AssistGetOrderDO> listByUserOpenIdAndNotPayment(String userOpenId);
+    List<AssistGetOrderDO> listByUserOpenIdAndClosed(String userOpenId);
+    List<AssistGetOrderDO> listByUserOpenIdAndFinished(String userOpenId);
+    List<AssistGetOrderDO> listByPayment();
+    List<AssistGetOrderDO> listByNotPayment();
+    List<AssistGetOrderDO> listByClosed();
+    List<AssistGetOrderDO> listByFinished();
     AssistGetOrderDO getById(Long id);
 }

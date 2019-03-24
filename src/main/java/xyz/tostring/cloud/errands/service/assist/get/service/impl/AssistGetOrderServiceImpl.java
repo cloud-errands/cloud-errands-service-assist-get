@@ -15,8 +15,13 @@ import java.util.Optional;
 @Service
 public class AssistGetOrderServiceImpl implements AssistGetOrderService {
 
-    private static final int YES_PAY_STATUS = 1;
-    private static final int NOT_PAY_STATUS = 0;
+    private static final int NOT_PAYMENT_STATUS = 0;
+    private static final int PAYMENT_STATUS = 1;
+    private static final int CLOSE_STATUS = 2;
+    private static final int FINISH_STATUS = 3;
+
+    private static final int TIME_OUT = 30 * 60 * 1000;
+    private static final int FINISH_TIME = 3 * 24 * 60 * 60 * 1000;
 
     @Autowired
     private AssistGetOrderDao assistGetOrderDao;
@@ -39,9 +44,10 @@ public class AssistGetOrderServiceImpl implements AssistGetOrderService {
         Date date = new Date();
         assistGetOrderDO.setId(snowflakeIdWorker.nextId());
         int weightLevel = assistGetOrderDO.getExpressWeightLevel();
-        assistGetOrderDO.setOrderSum(calculateOrderSum(weightLevel));
-        assistGetOrderDO.setPayStatus(0);
+        assistGetOrderDO.setOrderPayment(calculateOrderSum(weightLevel));
+        assistGetOrderDO.setOrderStatus(NOT_PAYMENT_STATUS);
         assistGetOrderDO.setCreateTime(date);
+        assistGetOrderDO.setCloseTime(new Date(date.getTime() + TIME_OUT));
         assistGetOrderDO.setLatestUpdateTime(date);
         assistGetOrderDao.save(assistGetOrderDO);
         return assistGetOrderDO;
@@ -54,7 +60,25 @@ public class AssistGetOrderServiceImpl implements AssistGetOrderService {
         if (byId.isPresent()) {
             Date date = new Date();
             assistGetOrderDO = byId.get();
-            assistGetOrderDO.setPayStatus(YES_PAY_STATUS);
+            assistGetOrderDO.setOrderStatus(PAYMENT_STATUS);
+            assistGetOrderDO.setLatestUpdateTime(date);
+            assistGetOrderDO.setEndTime(new Date(date.getTime() + FINISH_TIME));
+            assistGetOrderDao.save(assistGetOrderDO);
+            return assistGetOrderDO;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public AssistGetOrderDO orderFinish(AssistGetOrderDO assistGetOrderDO) {
+        Long id = assistGetOrderDO.getId();
+        Optional<AssistGetOrderDO> byId = assistGetOrderDao.findById(id);
+        if (byId.isPresent()) {
+            Date date = new Date();
+            assistGetOrderDO = byId.get();
+            assistGetOrderDO.setOrderStatus(FINISH_STATUS);
+            assistGetOrderDO.setEndTime(date);
             assistGetOrderDO.setLatestUpdateTime(date);
             assistGetOrderDao.save(assistGetOrderDO);
             return assistGetOrderDO;
@@ -74,23 +98,43 @@ public class AssistGetOrderServiceImpl implements AssistGetOrderService {
     }
 
     @Override
-    public List<AssistGetOrderDO> listByUserOpenIdAndPayStatusYes(String userOpenId) {
-        return assistGetOrderDao.findAllByUserOpenIdAndPayStatusOrderByLatestUpdateTimeDesc(userOpenId, YES_PAY_STATUS);
+    public List<AssistGetOrderDO> listByUserOpenIdAndPayment(String userOpenId) {
+        return assistGetOrderDao.findAllByUserOpenIdAndOrderStatusOrderByLatestUpdateTimeDesc(userOpenId, PAYMENT_STATUS);
     }
 
     @Override
-    public List<AssistGetOrderDO> listByUserOpenIdAndPayStatusNot(String userOpenId) {
-        return assistGetOrderDao.findAllByUserOpenIdAndPayStatusOrderByLatestUpdateTimeDesc(userOpenId, NOT_PAY_STATUS);
+    public List<AssistGetOrderDO> listByUserOpenIdAndNotPayment(String userOpenId) {
+        return assistGetOrderDao.findAllByUserOpenIdAndOrderStatusOrderByLatestUpdateTimeDesc(userOpenId, NOT_PAYMENT_STATUS);
     }
 
     @Override
-    public List<AssistGetOrderDO> listByPayStatusNot() {
-        return assistGetOrderDao.findAllByPayStatusOrderByLatestUpdateTimeAsc(NOT_PAY_STATUS);
+    public List<AssistGetOrderDO> listByUserOpenIdAndClosed(String userOpenId) {
+        return assistGetOrderDao.findAllByUserOpenIdAndOrderStatusOrderByLatestUpdateTimeDesc(userOpenId, CLOSE_STATUS);
     }
 
     @Override
-    public List<AssistGetOrderDO> listByPayStatusYes() {
-        return assistGetOrderDao.findAllByPayStatusOrderByLatestUpdateTimeDesc(YES_PAY_STATUS);
+    public List<AssistGetOrderDO> listByUserOpenIdAndFinished(String userOpenId) {
+        return assistGetOrderDao.findAllByUserOpenIdAndOrderStatusOrderByLatestUpdateTimeDesc(userOpenId, FINISH_STATUS);
+    }
+
+    @Override
+    public List<AssistGetOrderDO> listByNotPayment() {
+        return assistGetOrderDao.findAllByOrderStatusOrderByLatestUpdateTimeAsc(NOT_PAYMENT_STATUS);
+    }
+
+    @Override
+    public List<AssistGetOrderDO> listByPayment() {
+        return assistGetOrderDao.findAllByOrderStatusOrderByLatestUpdateTimeDesc(PAYMENT_STATUS);
+    }
+
+    @Override
+    public List<AssistGetOrderDO> listByClosed() {
+        return assistGetOrderDao.findAllByOrderStatusOrderByLatestUpdateTimeDesc(CLOSE_STATUS);
+    }
+
+    @Override
+    public List<AssistGetOrderDO> listByFinished() {
+        return assistGetOrderDao.findAllByOrderStatusOrderByLatestUpdateTimeDesc(FINISH_STATUS);
     }
 
     @Override

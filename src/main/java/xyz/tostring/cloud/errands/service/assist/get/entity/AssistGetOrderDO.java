@@ -7,22 +7,32 @@ import javax.persistence.Table;
 import java.util.Date;
 
 @Entity
-@Table(name = "tb_assist_get_order")
+@Table(name = "tb_order")
 public class AssistGetOrderDO {
     @Id
     private Long id;
     @Column
     private String userOpenId;
     @Column
-    private String addresseeName;
+    private String receiverName;
     @Column
-    private String addresseeTailNum;
+    private String receiverMobile;
     @Column
-    private String addresseePhoneNum;
+    private String receiverProvince;
     @Column
-    private String addresseeAddr;
+    private String receiverCity;
+    @Column
+    private String receiverDistrict;
+    @Column
+    private String receiverCollegeName;
+    @Column
+    private String receiverAddress;
     @Column
     private String expressCompany;
+    @Column
+    private String expressTailNum;
+    @Column
+    private String expressReceiveName;
     @Column
     private String expressSerialNum;
     @Column
@@ -32,13 +42,17 @@ public class AssistGetOrderDO {
     @Column
     private String expressType;
     @Column
-    private Double orderSum;
+    private Integer orderStatus;
     @Column
-    private Integer payStatus;
+    private Double orderPayment;
     @Column
     private Date createTime;
     @Column
-    private Date paySuccessTime;
+    private Date paymentTime;
+    @Column
+    private Date endTime;
+    @Column
+    private Date closeTime;
     @Column
     private Date latestUpdateTime;
 
@@ -58,36 +72,60 @@ public class AssistGetOrderDO {
         this.userOpenId = userOpenId;
     }
 
-    public String getAddresseeName() {
-        return addresseeName;
+    public String getReceiverName() {
+        return receiverName;
     }
 
-    public void setAddresseeName(String addresseeName) {
-        this.addresseeName = addresseeName;
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
     }
 
-    public String getAddresseeTailNum() {
-        return addresseeTailNum;
+    public String getReceiverMobile() {
+        return receiverMobile;
     }
 
-    public void setAddresseeTailNum(String addresseeTailNum) {
-        this.addresseeTailNum = addresseeTailNum;
+    public void setReceiverMobile(String receiverMobile) {
+        this.receiverMobile = receiverMobile;
     }
 
-    public String getAddresseePhoneNum() {
-        return addresseePhoneNum;
+    public String getReceiverProvince() {
+        return receiverProvince;
     }
 
-    public void setAddresseePhoneNum(String addresseePhoneNum) {
-        this.addresseePhoneNum = addresseePhoneNum;
+    public void setReceiverProvince(String receiverProvince) {
+        this.receiverProvince = receiverProvince;
     }
 
-    public String getAddresseeAddr() {
-        return addresseeAddr;
+    public String getReceiverCity() {
+        return receiverCity;
     }
 
-    public void setAddresseeAddr(String addresseeAddr) {
-        this.addresseeAddr = addresseeAddr;
+    public void setReceiverCity(String receiverCity) {
+        this.receiverCity = receiverCity;
+    }
+
+    public String getReceiverDistrict() {
+        return receiverDistrict;
+    }
+
+    public void setReceiverDistrict(String receiverDistrict) {
+        this.receiverDistrict = receiverDistrict;
+    }
+
+    public String getReceiverCollegeName() {
+        return receiverCollegeName;
+    }
+
+    public void setReceiverCollegeName(String receiverCollegeName) {
+        this.receiverCollegeName = receiverCollegeName;
+    }
+
+    public String getReceiverAddress() {
+        return receiverAddress;
+    }
+
+    public void setReceiverAddress(String receiverAddress) {
+        this.receiverAddress = receiverAddress;
     }
 
     public String getExpressCompany() {
@@ -96,6 +134,22 @@ public class AssistGetOrderDO {
 
     public void setExpressCompany(String expressCompany) {
         this.expressCompany = expressCompany;
+    }
+
+    public String getExpressTailNum() {
+        return expressTailNum;
+    }
+
+    public void setExpressTailNum(String expressTailNum) {
+        this.expressTailNum = expressTailNum;
+    }
+
+    public String getExpressReceiveName() {
+        return expressReceiveName;
+    }
+
+    public void setExpressReceiveName(String expressReceiveName) {
+        this.expressReceiveName = expressReceiveName;
     }
 
     public String getExpressSerialNum() {
@@ -130,20 +184,20 @@ public class AssistGetOrderDO {
         this.expressType = expressType;
     }
 
-    public Double getOrderSum() {
-        return orderSum;
+    public Integer getOrderStatus() {
+        return orderStatus;
     }
 
-    public void setOrderSum(Double orderSum) {
-        this.orderSum = orderSum;
+    public void setOrderStatus(Integer orderStatus) {
+        this.orderStatus = orderStatus;
     }
 
-    public Integer getPayStatus() {
-        return payStatus;
+    public Double getOrderPayment() {
+        return orderPayment;
     }
 
-    public void setPayStatus(Integer payStatus) {
-        this.payStatus = payStatus;
+    public void setOrderPayment(Double orderPayment) {
+        this.orderPayment = orderPayment;
     }
 
     public Date getCreateTime() {
@@ -154,12 +208,28 @@ public class AssistGetOrderDO {
         this.createTime = createTime;
     }
 
-    public Date getPaySuccessTime() {
-        return paySuccessTime;
+    public Date getPaymentTime() {
+        return paymentTime;
     }
 
-    public void setPaySuccessTime(Date paySuccessTime) {
-        this.paySuccessTime = paySuccessTime;
+    public void setPaymentTime(Date paymentTime) {
+        this.paymentTime = paymentTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
+    }
+
+    public Date getCloseTime() {
+        return closeTime;
+    }
+
+    public void setCloseTime(Date closeTime) {
+        this.closeTime = closeTime;
     }
 
     public Date getLatestUpdateTime() {
