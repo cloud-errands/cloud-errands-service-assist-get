@@ -8,7 +8,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "tb_order")
-public class AssistGetOrderDO {
+public class TableOrderDO {
     @Id
     private Long id;
     @Column
