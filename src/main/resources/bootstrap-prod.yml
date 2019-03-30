@@ -4,4 +4,4 @@ spring:
       uri: http://152.136.77.190:8888
       name: service-assist-get
       label: master
-      profile: dev
+      profile: prod
