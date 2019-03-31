@@ -15,6 +15,7 @@ public class TableOrderController {
     @Autowired
     private TableOrderService tableOrderService;
 
+    @CrossOrigin
     @PostMapping("create")
     public BaseResult create(@RequestBody TableOrderDO tableOrderDO) {
         tableOrderDO = tableOrderService.createOrder(tableOrderDO);
@@ -22,6 +23,7 @@ public class TableOrderController {
         return baseResult.ok(tableOrderDO);
     }
 
+    @CrossOrigin
     @PostMapping("payment")
     public BaseResult payment(@RequestBody TableOrderDO tableOrderDO) {
         tableOrderDO = tableOrderService.paySuccess(tableOrderDO);
@@ -29,6 +31,7 @@ public class TableOrderController {
         return baseResult.ok(tableOrderDO);
     }
 
+    @CrossOrigin
     @PostMapping("finish")
     private BaseResult finish(@RequestBody TableOrderDO tableOrderDO) {
         tableOrderDO = tableOrderService.orderFinish(tableOrderDO);
@@ -36,6 +39,7 @@ public class TableOrderController {
         return baseResult.ok(tableOrderDO);
     }
 
+    @CrossOrigin
     @PostMapping("list")
     public BaseResult listAll(@RequestBody TableOrderDoQuery tableOrderDoQuery) {
         Page<TableOrderDO> tableOrderDOPage = tableOrderService.listAllCriteria(tableOrderDoQuery);
@@ -43,6 +47,7 @@ public class TableOrderController {
         return baseResult.ok(tableOrderDOPage);
     }
 
+    @CrossOrigin
     @GetMapping("{id}")
     public BaseResult getById(@PathVariable("id") Long id) {
         TableOrderDO tableOrderDO = tableOrderService.getById(id);
