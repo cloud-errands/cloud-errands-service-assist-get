@@ -42,9 +42,13 @@ public class TableOrderDO {
     @Column
     private String expressType;
     @Column
+    private Integer expressCount;
+    @Column
     private Integer orderStatus;
     @Column
     private Double orderPayment;
+    @Column
+    private String leaveMessage;
     @Column
     private Date createTime;
     @Column
@@ -238,5 +242,21 @@ public class TableOrderDO {
 
     public void setLatestUpdateTime(Date latestUpdateTime) {
         this.latestUpdateTime = latestUpdateTime;
+    }
+
+    public Integer getExpressCount() {
+        return expressCount;
+    }
+
+    public void setExpressCount(Integer expressCount) {
+        this.expressCount = expressCount;
+    }
+
+    public String getLeaveMessage() {
+        return leaveMessage;
+    }
+
+    public void setLeaveMessage(String leaveMessage) {
+        this.leaveMessage = leaveMessage;
     }
 }

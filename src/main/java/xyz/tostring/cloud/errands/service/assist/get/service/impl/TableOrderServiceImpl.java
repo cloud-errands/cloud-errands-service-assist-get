@@ -64,7 +64,8 @@ public class TableOrderServiceImpl implements TableOrderService {
         Long id = snowflakeIdWorker.nextId();
         tableOrderDO.setId(id);
         int weightLevel = tableOrderDO.getExpressWeightLevel();
-        tableOrderDO.setOrderPayment(calculateOrderSum(weightLevel));
+        int count = tableOrderDO.getExpressCount();
+        tableOrderDO.setOrderPayment(calculateOrderSum(weightLevel, count));
         tableOrderDO.setOrderStatus(NOT_PAYMENT_STATUS);
         tableOrderDO.setCreateTime(date);
         tableOrderDO.setLatestUpdateTime(date);
@@ -204,14 +205,14 @@ public class TableOrderServiceImpl implements TableOrderService {
     }
 
 
-    private double calculateOrderSum(int expressWeightLevel) {
+    private double calculateOrderSum(int expressWeightLevel, int count) {
         switch (expressWeightLevel) {
             case 0:
-                return level0;
+                return level0 * count;
             case 1:
-                return level1;
+                return level1 * count;
             case 2:
-                return level2;
+                return level2 * count;
             default:
                 return 0;
         }
