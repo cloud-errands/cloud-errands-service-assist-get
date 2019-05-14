@@ -24,14 +24,6 @@ public class TableOrderController {
     }
 
     @CrossOrigin
-    @PostMapping("payment")
-    public BaseResult payment(@RequestBody TableOrderDO tableOrderDO) {
-        tableOrderDO = tableOrderService.paySuccess(tableOrderDO);
-        BaseResult baseResult = new BaseResult();
-        return baseResult.ok(tableOrderDO);
-    }
-
-    @CrossOrigin
     @PostMapping("finish")
     private BaseResult finish(@RequestBody TableOrderDO tableOrderDO) {
         tableOrderDO = tableOrderService.orderFinish(tableOrderDO);

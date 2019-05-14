@@ -97,25 +97,21 @@ public class TableOrderServiceImpl implements TableOrderService {
 
     @Override
     @Transactional
-    public TableOrderDO paySuccess(TableOrderDO tableOrderDO) {
-        Long id = tableOrderDO.getId();
-        Optional<TableOrderDO> byId = tableOrderRepository.findById(id);
+    public void paySuccess(Long out_trade_no, Date accountTime) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(out_trade_no);
         if (byId.isPresent()) {
-            Date date = new Date();
-            tableOrderDO = byId.get();
-            tableOrderDO.setOrderStatus(PAYMENT_STATUS);
-            tableOrderDO.setLatestUpdateTime(date);
-            tableOrderRepository.save(tableOrderDO);
+            TableOrderDO tableOrderDO = byId.get();
+            if (tableOrderDO.getOrderStatus() == NOT_PAYMENT_STATUS) {
+                tableOrderDO.setOrderStatus(PAYMENT_STATUS);
+                tableOrderDO.setLatestUpdateTime(accountTime);
+                tableOrderRepository.save(tableOrderDO);
 
-            //创建订单延时消息
-            amqpTemplate.convertAndSend("assist_get_delay_exchange", "assist_get_finish_queue", String.valueOf(id), (message) -> {
-                message.getMessageProperties().setHeader("x-delay", finishTime);
-                return message;
-            });
-
-            return tableOrderDO;
-        } else {
-            return null;
+                //创建订单延时消息
+                amqpTemplate.convertAndSend("assist_get_delay_exchange", "assist_get_finish_queue", String.valueOf(out_trade_no), (message) -> {
+                    message.getMessageProperties().setHeader("x-delay", finishTime);
+                    return message;
+                });
+            }
         }
     }
 
