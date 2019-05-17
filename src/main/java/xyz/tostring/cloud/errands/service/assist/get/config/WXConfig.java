@@ -14,7 +14,8 @@ public class WXConfig extends WXPayConfig {
     private byte[] certData;
 
     public WXConfig() throws Exception {
-        String certPath = this.getClass().getResource("/").getPath() +  "/ssl/apiclient_cert.p12";
+//        String certPath = this.getClass().getResource("/").getPath() +  "/ssl/apiclient_cert.p12";
+        String certPath = "/wx-pay-ssl/apiclient_cert.p12";
         File file = new File(certPath);
         InputStream certStream = new FileInputStream(file);
         this.certData = new byte[(int) file.length()];

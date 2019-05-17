@@ -55,21 +55,13 @@ public class WXPayController {
         outSteam.close();
         inStream.close();
 
-        WXPay wxPay = new WXPay(wxConfig);
+        wxPayService.doWXNotify(notifyMap);
 
         Map<String, String> returnData = new HashMap<>();
-        if (!wxPay.isPayResultNotifySignatureValid(notifyMap)) {
-            // 支付失败
-            returnData.put("return_code", "FAIL");
-            returnData.put("return_msg", "return_code不正确");
-            return WXPayUtil.mapToXml(returnData);
-        } else {
-            // 处理通知
-            wxPayService.doWXNotify(notifyMap);
+        returnData.put("return_code", "SUCCESS");
+        returnData.put("return_msg", "OK");
 
-            returnData.put("return_code", "SUCCESS");
-            returnData.put("return_msg", "OK");
-            return WXPayUtil.mapToXml(returnData);
-        }
+        return WXPayUtil.mapToXml(returnData);
+
     }
 }

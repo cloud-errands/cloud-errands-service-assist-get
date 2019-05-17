@@ -88,11 +88,12 @@ public class WXPayServiceImpl implements WXPayService {
 
     @Override
     public void doWXNotify(Map<String, String> notifyMap) {
+
+
         String return_code = notifyMap.get("return_code");
         String result_code = notifyMap.get("result_code");
-        String trade_state = notifyMap.get("trade_state");
 
-        if ("SUCCESS".equals(return_code) && "SUCCESS".equals(result_code) && "SUCCESS".equals(trade_state)) {
+        if ("SUCCESS".equals(return_code) && "SUCCESS".equals(result_code)) {
             double total_fee = Double.valueOf(notifyMap.get("total_fee")) / 100;
             Long out_trade_no = Long.parseLong(notifyMap.get("out_trade_no").split("O")[0]);
             Date accountTime = DateUtil.stringtoDate(notifyMap.get("time_end"), "yyyyMMddHHmmss");
