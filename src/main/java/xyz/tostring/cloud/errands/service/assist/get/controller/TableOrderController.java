@@ -24,11 +24,43 @@ public class TableOrderController {
     }
 
     @CrossOrigin
-    @PostMapping("finish")
-    private BaseResult finish(@RequestBody TableOrderDO tableOrderDO) {
-        tableOrderDO = tableOrderService.orderFinish(tableOrderDO);
+    @PostMapping("cancel")
+    public BaseResult cancel(Long orderId) {
         BaseResult baseResult = new BaseResult();
-        return baseResult.ok(tableOrderDO);
+        tableOrderService.cancelOrder(orderId);
+        return baseResult.ok();
+    }
+
+    @CrossOrigin
+    @PostMapping("refund")
+    public BaseResult refund(Long orderId, String refundContent) {
+        BaseResult baseResult = new BaseResult();
+        String result = tableOrderService.preRefundOrder(orderId, refundContent);
+        return baseResult.ok(result);
+    }
+
+    @CrossOrigin
+    @PostMapping("accept")
+    public BaseResult accept(Long orderId) {
+        BaseResult baseResult = new BaseResult();
+        tableOrderService.acceptOrder(orderId);
+        return baseResult.ok();
+    }
+
+    @CrossOrigin
+    @PostMapping("finish")
+    public BaseResult finish(Long orderId) {
+        BaseResult baseResult = new BaseResult();
+        tableOrderService.finishOrder(orderId);
+        return baseResult.ok();
+    }
+
+    @CrossOrigin
+    @PostMapping("evaluate")
+    public BaseResult evaluate(Long orderId, String content) {
+        BaseResult baseResult = new BaseResult();
+        tableOrderService.evaluateOrder(orderId, content);
+        return baseResult.ok();
     }
 
     @CrossOrigin

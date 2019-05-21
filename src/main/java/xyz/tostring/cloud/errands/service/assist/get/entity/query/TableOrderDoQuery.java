@@ -2,7 +2,7 @@ package xyz.tostring.cloud.errands.service.assist.get.entity.query;
 
 public class TableOrderDoQuery {
     private String userOpenId;
-    private String receiverCollegeName;
+    private Integer collegeId;
     private Integer orderStatus;
     private Integer page;
     private Integer size;
@@ -16,12 +16,12 @@ public class TableOrderDoQuery {
         this.userOpenId = userOpenId;
     }
 
-    public String getReceiverCollegeName() {
-        return receiverCollegeName;
+    public Integer getCollegeId() {
+        return collegeId;
     }
 
-    public void setReceiverCollegeName(String receiverCollegeName) {
-        this.receiverCollegeName = receiverCollegeName;
+    public void setCollegeId(Integer collegeId) {
+        this.collegeId = collegeId;
     }
 
     public Integer getOrderStatus() {

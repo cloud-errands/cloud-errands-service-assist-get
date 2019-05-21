@@ -1,5 +1,6 @@
 package xyz.tostring.cloud.errands.service.assist.get.service.impl;
 
+import com.github.wxpay.sdk.WXPayConstants;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,29 +12,40 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.tostring.cloud.errands.common.service.util.SnowflakeIdWorker;
+import xyz.tostring.cloud.errands.service.assist.get.config.DelayQueueConfig;
+import xyz.tostring.cloud.errands.service.assist.get.entity.TableRefundDO;
 import xyz.tostring.cloud.errands.service.assist.get.entity.query.TableOrderDoQuery;
 import xyz.tostring.cloud.errands.service.assist.get.repository.TableOrderRepository;
 import xyz.tostring.cloud.errands.service.assist.get.entity.TableOrderDO;
+import xyz.tostring.cloud.errands.service.assist.get.repository.TableRefundRepository;
 import xyz.tostring.cloud.errands.service.assist.get.service.TableOrderService;
+import xyz.tostring.cloud.errands.service.assist.get.service.WXPayService;
 
 import javax.persistence.criteria.Predicate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class TableOrderServiceImpl implements TableOrderService {
 
-    private static final int NOT_PAYMENT_STATUS = 0;
-    private static final int PAYMENT_STATUS = 1;
-    private static final int CLOSE_STATUS = 2;
-    private static final int FINISH_STATUS = 3;
+    private static final int CLOSE_STATUS = 0;
+    private static final int NOT_PAYMENT_STATUS = 1;
+    private static final int PAYMENT_STATUS = 2;
+    private static final int PRE_REFUND_STATUS = 3;
+    private static final int REFUND_STATUS = 4;
+    private static final int ACCEPT_STATUS = 5;
+    private static final int FINISH_STATUS = 6;
+    private static final int END_STATUS = 7;
 
-    private static final String PROPERTY_LATEST_UPDATE_TIME = "latestUpdateTime";
+    private static final String PROPERTY_CREATE_TIME = "createTime";
 
     @Autowired
     private TableOrderRepository tableOrderRepository;
+
+    @Autowired
+    private WXPayService wxPayService;
+
+    @Autowired
+    private TableRefundRepository tableRefundRepository;
 
     @Autowired
     private SnowflakeIdWorker snowflakeIdWorker;
@@ -51,11 +63,16 @@ public class TableOrderServiceImpl implements TableOrderService {
     private double level2;
 
     @Value("${order.overtime.cancel}")
-    private long cancelTime;
+    private long cancelTimestamp;
 
     @Value("${order.overtime.finish}")
-    private long finishTime;
+    private long finishTimestamp;
 
+    @Value("${order.overtime.end}")
+    private long endTimestamp;
+
+    @Value("${order.overtime.pre-refund}")
+    private long preRefundTimestamp;
 
     @Override
     @Transactional
@@ -72,26 +89,43 @@ public class TableOrderServiceImpl implements TableOrderService {
         tableOrderRepository.save(tableOrderDO);
 
         //创建订单延时消息
-        amqpTemplate.convertAndSend("assist_get_delay_exchange", "assist_get_cancel_queue", String.valueOf(id), (message) -> {
-            message.getMessageProperties().setHeader("x-delay", cancelTime);
+        amqpTemplate.convertAndSend(DelayQueueConfig.CUSTOM_EXCHANGE_NAME, DelayQueueConfig.CANCEL_QUEUE_NAME, String.valueOf(id), (message) -> {
+            message.getMessageProperties().setHeader("x-delay", cancelTimestamp);
             return message;
         });
 
         return tableOrderDO;
     }
 
+    @Override
     @Transactional
-    @RabbitListener(queues = "assist_get_cancel_queue")
-    public void orderCancel(String msg) {
-        Date date = new Date();
-        long id = Long.parseLong(msg);
+    public void cancelOrder(Long orderId) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(orderId);
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            if (NOT_PAYMENT_STATUS == tableOrderDO.getOrderStatus()) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(CLOSE_STATUS);
+                tableOrderDO.setCloseTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
+            }
+        }
+    }
 
-        TableOrderDO order = getById(id);
-        if (order != null && order.getOrderStatus() == NOT_PAYMENT_STATUS) {
-            order.setOrderStatus(CLOSE_STATUS);
-            order.setCloseTime(date);
-            order.setLatestUpdateTime(date);
-            tableOrderRepository.save(order);
+    @Transactional
+    @RabbitListener(queues = DelayQueueConfig.CANCEL_QUEUE_NAME)
+    public void cancelOrder(String msg) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(Long.parseLong(msg));
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            if (NOT_PAYMENT_STATUS == tableOrderDO.getOrderStatus()) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(CLOSE_STATUS);
+                tableOrderDO.setCloseTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
+            }
         }
     }
 
@@ -101,50 +135,207 @@ public class TableOrderServiceImpl implements TableOrderService {
         Optional<TableOrderDO> byId = tableOrderRepository.findById(out_trade_no);
         if (byId.isPresent()) {
             TableOrderDO tableOrderDO = byId.get();
-            if (tableOrderDO.getOrderStatus() == NOT_PAYMENT_STATUS) {
+            if (NOT_PAYMENT_STATUS == tableOrderDO.getOrderStatus()) {
                 tableOrderDO.setOrderStatus(PAYMENT_STATUS);
+                tableOrderDO.setPaymentTime(accountTime);
                 tableOrderDO.setLatestUpdateTime(accountTime);
                 tableOrderRepository.save(tableOrderDO);
 
                 //创建订单延时消息
-                amqpTemplate.convertAndSend("assist_get_delay_exchange", "assist_get_finish_queue", String.valueOf(out_trade_no), (message) -> {
-                    message.getMessageProperties().setHeader("x-delay", finishTime);
+                amqpTemplate.convertAndSend(DelayQueueConfig.CUSTOM_EXCHANGE_NAME, DelayQueueConfig.FINISH_QUEUE_NAME, String.valueOf(out_trade_no), (message) -> {
+                    message.getMessageProperties().setHeader("x-delay", finishTimestamp);
                     return message;
                 });
             }
         }
     }
 
+    @Override
     @Transactional
-    @RabbitListener(queues = "assist_get_finish_queue")
-    public void orderFinish(String msg) {
-        Date date = new Date();
-        long id = Long.parseLong(msg);
+    public String preRefundOrder(Long orderId, String refundContent) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(orderId);
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            if (PAYMENT_STATUS == tableOrderDO.getOrderStatus()) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(PRE_REFUND_STATUS);
+                tableOrderDO.setPreRefundTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
 
-        TableOrderDO order = getById(id);
-        if (order != null && order.getOrderStatus() == PAYMENT_STATUS) {
-            order.setOrderStatus(FINISH_STATUS);
-            order.setEndTime(date);
-            order.setLatestUpdateTime(date);
-            tableOrderRepository.save(order);
+                TableRefundDO tableRefundDO = tableRefundRepository.findAllByOrderId(orderId);
+
+                if (null == tableOrderDO) {
+                    tableRefundDO = new TableRefundDO();
+                    tableRefundDO.setOrderId(orderId);
+                    tableRefundDO.setPreRefundTime(date);
+                    tableRefundDO.setRefundContent(refundContent);
+                    tableRefundRepository.save(tableRefundDO);
+                } else {
+                    tableRefundDO.setPreRefundTime(date);
+                    tableRefundDO.setRefundContent(refundContent);
+                    tableRefundRepository.save(tableRefundDO);
+                }
+
+                try {
+                    TableRefundDO tableRefund = tableRefundRepository.findAllByOrderId(orderId);
+                    Map<String, String> result = wxPayService.refund(String.valueOf(orderId), String.valueOf(tableRefund.getId()));
+                    if (null != result && WXPayConstants.SUCCESS.equals(result.get("return_code")) && WXPayConstants.SUCCESS.equals(result.get("result_code"))) {
+
+//                        amqpTemplate.convertAndSend(DelayQueueConfig.CUSTOM_EXCHANGE_NAME, DelayQueueConfig.PRE_REFUND_QUEUE_NAME, String.valueOf(orderId), message -> {
+//                            message.getMessageProperties().setHeader("x-delay", preRefundTimestamp);
+//                            return message;
+//                        });
+
+                        return WXPayConstants.SUCCESS;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return WXPayConstants.FAIL;
+    }
+
+//    @Transactional
+//    @RabbitListener(queues = DelayQueueConfig.PRE_REFUND_QUEUE_NAME)
+//    public void preRefundOrder(String msg) {
+//        Optional<TableOrderDO> byId = tableOrderRepository.findById(Long.parseLong(msg));
+//        if (byId.isPresent()) {
+//            TableOrderDO tableOrderDO = byId.get();
+//            if (PRE_REFUND_STATUS == tableOrderDO.getOrderStatus()) {
+//
+//                try {
+//                    wxPayService.refund(msg);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
+
+    @Override
+    @Transactional
+    public void refundOrder(Long out_trade_no, Date accountTime) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(out_trade_no);
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            if (PRE_REFUND_STATUS == tableOrderDO.getOrderStatus()) {
+                tableOrderDO.setOrderStatus(REFUND_STATUS);
+                tableOrderDO.setRefundTime(accountTime);
+                tableOrderDO.setLatestUpdateTime(accountTime);
+                tableOrderRepository.save(tableOrderDO);
+            }
         }
     }
 
     @Override
     @Transactional
-    public TableOrderDO orderFinish(TableOrderDO tableOrderDO) {
-        Long id = tableOrderDO.getId();
-        Optional<TableOrderDO> byId = tableOrderRepository.findById(id);
+    public void acceptOrder(Long orderId) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(orderId);
         if (byId.isPresent()) {
-            Date date = new Date();
-            tableOrderDO = byId.get();
-            tableOrderDO.setOrderStatus(FINISH_STATUS);
-            tableOrderDO.setEndTime(date);
-            tableOrderDO.setLatestUpdateTime(date);
-            tableOrderRepository.save(tableOrderDO);
-            return tableOrderDO;
-        } else {
-            return null;
+            TableOrderDO tableOrderDO = byId.get();
+            if (PAYMENT_STATUS == tableOrderDO.getOrderStatus()) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(ACCEPT_STATUS);
+                tableOrderDO.setRefundTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
+            }
+        }
+    }
+
+    @Transactional
+    @RabbitListener(queues = DelayQueueConfig.FINISH_QUEUE_NAME)
+    public void finishOrder(String msg) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(Long.parseLong(msg));
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            int orderStatus = tableOrderDO.getOrderStatus();
+            if (PAYMENT_STATUS == orderStatus || ACCEPT_STATUS == orderStatus && REFUND_STATUS != orderStatus) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(FINISH_STATUS);
+                tableOrderDO.setFinishTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
+
+                amqpTemplate.convertAndSend(DelayQueueConfig.CUSTOM_EXCHANGE_NAME, DelayQueueConfig.END_QUEUE_NAME, msg, (message) -> {
+                    message.getMessageProperties().setHeader("x-delay", endTimestamp);
+                    return message;
+                });
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void finishOrder(Long orderId) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(orderId);
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            int orderStatus = tableOrderDO.getOrderStatus();
+            if (PAYMENT_STATUS == orderStatus || ACCEPT_STATUS == orderStatus && REFUND_STATUS != orderStatus) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(FINISH_STATUS);
+                tableOrderDO.setFinishTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
+
+                amqpTemplate.convertAndSend(DelayQueueConfig.CUSTOM_EXCHANGE_NAME, DelayQueueConfig.END_QUEUE_NAME, String.valueOf(orderId), (message) -> {
+                    message.getMessageProperties().setHeader("x-delay", endTimestamp);
+                    return message;
+                });
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void evaluateOrder(Long orderId, String content) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(orderId);
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            if (FINISH_STATUS == tableOrderDO.getOrderStatus()) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(END_STATUS);
+                tableOrderDO.setEvaluateContent(content);
+                tableOrderDO.setEvaluateTime(date);
+                tableOrderDO.setEndTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void endOrder(Long orderId) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(orderId);
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            if (FINISH_STATUS == tableOrderDO.getOrderStatus()) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(END_STATUS);
+                tableOrderDO.setEndTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
+            }
+        }
+    }
+
+    @Transactional
+    @RabbitListener(queues = DelayQueueConfig.END_QUEUE_NAME)
+    public void endOrder(String msg) {
+        Optional<TableOrderDO> byId = tableOrderRepository.findById(Long.parseLong(msg));
+        if (byId.isPresent()) {
+            TableOrderDO tableOrderDO = byId.get();
+            if (FINISH_STATUS == tableOrderDO.getOrderStatus()) {
+                Date date = new Date();
+                tableOrderDO.setOrderStatus(END_STATUS);
+                tableOrderDO.setEndTime(date);
+                tableOrderDO.setLatestUpdateTime(date);
+                tableOrderRepository.save(tableOrderDO);
+            }
         }
     }
 
@@ -166,14 +357,14 @@ public class TableOrderServiceImpl implements TableOrderService {
                 direction = Sort.Direction.DESC;
                 break;
         }
-        PageRequest pageRequest = pageRequest(tableOrderDoQuery.getPage(), tableOrderDoQuery.getSize(), direction, PROPERTY_LATEST_UPDATE_TIME);
+        PageRequest pageRequest = pageRequest(tableOrderDoQuery.getPage(), tableOrderDoQuery.getSize(), direction, PROPERTY_CREATE_TIME);
         Page<TableOrderDO> tableOrderDOPage = tableOrderRepository.findAll((Specification<TableOrderDO>) (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicateList = new ArrayList<>();
             if (null != tableOrderDoQuery.getUserOpenId() && !"".equals(tableOrderDoQuery.getUserOpenId())) {
                 predicateList.add(criteriaBuilder.equal(root.get("userOpenId").as(String.class), tableOrderDoQuery.getUserOpenId()));
             }
-            if (null != tableOrderDoQuery.getReceiverCollegeName() && !"".equals(tableOrderDoQuery.getReceiverCollegeName())) {
-                predicateList.add(criteriaBuilder.equal(root.get("receiverCollegeName").as(String.class), tableOrderDoQuery.getReceiverCollegeName()));
+            if (null != tableOrderDoQuery.getCollegeId() && !"".equals(tableOrderDoQuery.getCollegeId())) {
+                predicateList.add(criteriaBuilder.equal(root.get("collegeId").as(String.class), tableOrderDoQuery.getCollegeId()));
             }
             if (null != tableOrderDoQuery.getOrderStatus() && !"".equals(tableOrderDoQuery.getOrderStatus())) {
                 predicateList.add(criteriaBuilder.equal(root.get("orderStatus").as(String.class), tableOrderDoQuery.getOrderStatus()));

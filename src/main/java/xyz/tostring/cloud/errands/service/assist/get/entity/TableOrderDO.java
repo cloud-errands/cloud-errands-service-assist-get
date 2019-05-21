@@ -14,19 +14,9 @@ public class TableOrderDO {
     @Column
     private String userOpenId;
     @Column
-    private String receiverName;
+    private Long receiveInfoId;
     @Column
-    private String receiverMobile;
-    @Column
-    private String receiverProvince;
-    @Column
-    private String receiverCity;
-    @Column
-    private String receiverDistrict;
-    @Column
-    private String receiverCollegeName;
-    @Column
-    private String receiverAddress;
+    private Integer collegeId;
     @Column
     private String expressCompany;
     @Column
@@ -50,13 +40,25 @@ public class TableOrderDO {
     @Column
     private String leaveMessage;
     @Column
+    private String evaluateContent;
+    @Column
     private Date createTime;
+    @Column
+    private Date closeTime;
     @Column
     private Date paymentTime;
     @Column
-    private Date endTime;
+    private Date refundTime;
     @Column
-    private Date closeTime;
+    private Date preRefundTime;
+    @Column
+    private Date acceptTime;
+    @Column
+    private Date finishTime;
+    @Column
+    private Date evaluateTime;
+    @Column
+    private Date endTime;
     @Column
     private Date latestUpdateTime;
 
@@ -76,60 +78,20 @@ public class TableOrderDO {
         this.userOpenId = userOpenId;
     }
 
-    public String getReceiverName() {
-        return receiverName;
+    public Long getReceiveInfoId() {
+        return receiveInfoId;
     }
 
-    public void setReceiverName(String receiverName) {
-        this.receiverName = receiverName;
+    public void setReceiveInfoId(Long receiveInfoId) {
+        this.receiveInfoId = receiveInfoId;
     }
 
-    public String getReceiverMobile() {
-        return receiverMobile;
+    public Integer getCollegeId() {
+        return collegeId;
     }
 
-    public void setReceiverMobile(String receiverMobile) {
-        this.receiverMobile = receiverMobile;
-    }
-
-    public String getReceiverProvince() {
-        return receiverProvince;
-    }
-
-    public void setReceiverProvince(String receiverProvince) {
-        this.receiverProvince = receiverProvince;
-    }
-
-    public String getReceiverCity() {
-        return receiverCity;
-    }
-
-    public void setReceiverCity(String receiverCity) {
-        this.receiverCity = receiverCity;
-    }
-
-    public String getReceiverDistrict() {
-        return receiverDistrict;
-    }
-
-    public void setReceiverDistrict(String receiverDistrict) {
-        this.receiverDistrict = receiverDistrict;
-    }
-
-    public String getReceiverCollegeName() {
-        return receiverCollegeName;
-    }
-
-    public void setReceiverCollegeName(String receiverCollegeName) {
-        this.receiverCollegeName = receiverCollegeName;
-    }
-
-    public String getReceiverAddress() {
-        return receiverAddress;
-    }
-
-    public void setReceiverAddress(String receiverAddress) {
-        this.receiverAddress = receiverAddress;
+    public void setCollegeId(Integer collegeId) {
+        this.collegeId = collegeId;
     }
 
     public String getExpressCompany() {
@@ -188,6 +150,14 @@ public class TableOrderDO {
         this.expressType = expressType;
     }
 
+    public Integer getExpressCount() {
+        return expressCount;
+    }
+
+    public void setExpressCount(Integer expressCount) {
+        this.expressCount = expressCount;
+    }
+
     public Integer getOrderStatus() {
         return orderStatus;
     }
@@ -204,28 +174,28 @@ public class TableOrderDO {
         this.orderPayment = orderPayment;
     }
 
+    public String getLeaveMessage() {
+        return leaveMessage;
+    }
+
+    public void setLeaveMessage(String leaveMessage) {
+        this.leaveMessage = leaveMessage;
+    }
+
+    public String getEvaluateContent() {
+        return evaluateContent;
+    }
+
+    public void setEvaluateContent(String evaluateContent) {
+        this.evaluateContent = evaluateContent;
+    }
+
     public Date getCreateTime() {
         return createTime;
     }
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
-    }
-
-    public Date getPaymentTime() {
-        return paymentTime;
-    }
-
-    public void setPaymentTime(Date paymentTime) {
-        this.paymentTime = paymentTime;
-    }
-
-    public Date getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Date endTime) {
-        this.endTime = endTime;
     }
 
     public Date getCloseTime() {
@@ -236,27 +206,67 @@ public class TableOrderDO {
         this.closeTime = closeTime;
     }
 
+    public Date getPaymentTime() {
+        return paymentTime;
+    }
+
+    public void setPaymentTime(Date paymentTime) {
+        this.paymentTime = paymentTime;
+    }
+
+    public Date getPreRefundTime() {
+        return preRefundTime;
+    }
+
+    public void setPreRefundTime(Date preRefundTime) {
+        this.preRefundTime = preRefundTime;
+    }
+
+    public Date getRefundTime() {
+        return refundTime;
+    }
+
+    public void setRefundTime(Date refundTime) {
+        this.refundTime = refundTime;
+    }
+
+    public Date getAcceptTime() {
+        return acceptTime;
+    }
+
+    public void setAcceptTime(Date acceptTime) {
+        this.acceptTime = acceptTime;
+    }
+
+    public Date getFinishTime() {
+        return finishTime;
+    }
+
+    public void setFinishTime(Date finishTime) {
+        this.finishTime = finishTime;
+    }
+
+    public Date getEvaluateTime() {
+        return evaluateTime;
+    }
+
+    public void setEvaluateTime(Date evaluateTime) {
+        this.evaluateTime = evaluateTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
+    }
+
     public Date getLatestUpdateTime() {
         return latestUpdateTime;
     }
 
     public void setLatestUpdateTime(Date latestUpdateTime) {
         this.latestUpdateTime = latestUpdateTime;
-    }
-
-    public Integer getExpressCount() {
-        return expressCount;
-    }
-
-    public void setExpressCount(Integer expressCount) {
-        this.expressCount = expressCount;
-    }
-
-    public String getLeaveMessage() {
-        return leaveMessage;
-    }
-
-    public void setLeaveMessage(String leaveMessage) {
-        this.leaveMessage = leaveMessage;
     }
 }
