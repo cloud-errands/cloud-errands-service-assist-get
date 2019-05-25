@@ -15,7 +15,7 @@ public interface TableOrderService {
     void refundOrder(Long out_trade_no, Date accountTime);
     void acceptOrder(Long orderId);
     void finishOrder(Long orderId);
-    void evaluateOrder(Long orderId, String content);
+    void evaluateOrder(Long orderId, String content, Integer stars);
     void endOrder(Long orderId);
     Page<TableOrderDO> listAllCriteria(TableOrderDoQuery tableOrderDoQuery);
     TableOrderDO getById(Long id);

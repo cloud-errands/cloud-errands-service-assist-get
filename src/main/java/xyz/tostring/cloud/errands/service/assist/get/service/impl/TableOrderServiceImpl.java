@@ -71,8 +71,8 @@ public class TableOrderServiceImpl implements TableOrderService {
     @Value("${order.overtime.end}")
     private long endTimestamp;
 
-    @Value("${order.overtime.pre-refund}")
-    private long preRefundTimestamp;
+//    @Value("${order.overtime.pre-refund}")
+//    private long preRefundTimestamp;
 
     @Override
     @Transactional
@@ -164,22 +164,25 @@ public class TableOrderServiceImpl implements TableOrderService {
                 tableOrderRepository.save(tableOrderDO);
 
                 TableRefundDO tableRefundDO = tableRefundRepository.findAllByOrderId(orderId);
+                Long refundId;
 
-                if (null == tableOrderDO) {
+                if (null == tableRefundDO) {
+                    refundId = snowflakeIdWorker.nextId();
                     tableRefundDO = new TableRefundDO();
+                    tableRefundDO.setId(refundId);
                     tableRefundDO.setOrderId(orderId);
                     tableRefundDO.setPreRefundTime(date);
                     tableRefundDO.setRefundContent(refundContent);
                     tableRefundRepository.save(tableRefundDO);
                 } else {
+                    refundId = tableRefundDO.getId();
                     tableRefundDO.setPreRefundTime(date);
                     tableRefundDO.setRefundContent(refundContent);
                     tableRefundRepository.save(tableRefundDO);
                 }
 
                 try {
-                    TableRefundDO tableRefund = tableRefundRepository.findAllByOrderId(orderId);
-                    Map<String, String> result = wxPayService.refund(String.valueOf(orderId), String.valueOf(tableRefund.getId()));
+                    Map<String, String> result = wxPayService.refund(String.valueOf(orderId), String.valueOf(refundId));
                     if (null != result && WXPayConstants.SUCCESS.equals(result.get("return_code")) && WXPayConstants.SUCCESS.equals(result.get("result_code"))) {
 
 //                        amqpTemplate.convertAndSend(DelayQueueConfig.CUSTOM_EXCHANGE_NAME, DelayQueueConfig.PRE_REFUND_QUEUE_NAME, String.valueOf(orderId), message -> {
@@ -252,7 +255,7 @@ public class TableOrderServiceImpl implements TableOrderService {
         if (byId.isPresent()) {
             TableOrderDO tableOrderDO = byId.get();
             int orderStatus = tableOrderDO.getOrderStatus();
-            if (PAYMENT_STATUS == orderStatus || ACCEPT_STATUS == orderStatus && REFUND_STATUS != orderStatus) {
+            if (PAYMENT_STATUS == orderStatus || ACCEPT_STATUS == orderStatus) {
                 Date date = new Date();
                 tableOrderDO.setOrderStatus(FINISH_STATUS);
                 tableOrderDO.setFinishTime(date);
@@ -274,7 +277,7 @@ public class TableOrderServiceImpl implements TableOrderService {
         if (byId.isPresent()) {
             TableOrderDO tableOrderDO = byId.get();
             int orderStatus = tableOrderDO.getOrderStatus();
-            if (PAYMENT_STATUS == orderStatus || ACCEPT_STATUS == orderStatus && REFUND_STATUS != orderStatus) {
+            if (PAYMENT_STATUS == orderStatus || ACCEPT_STATUS == orderStatus) {
                 Date date = new Date();
                 tableOrderDO.setOrderStatus(FINISH_STATUS);
                 tableOrderDO.setFinishTime(date);
@@ -291,7 +294,7 @@ public class TableOrderServiceImpl implements TableOrderService {
 
     @Override
     @Transactional
-    public void evaluateOrder(Long orderId, String content) {
+    public void evaluateOrder(Long orderId, String content, Integer stars) {
         Optional<TableOrderDO> byId = tableOrderRepository.findById(orderId);
         if (byId.isPresent()) {
             TableOrderDO tableOrderDO = byId.get();
@@ -299,6 +302,7 @@ public class TableOrderServiceImpl implements TableOrderService {
                 Date date = new Date();
                 tableOrderDO.setOrderStatus(END_STATUS);
                 tableOrderDO.setEvaluateContent(content);
+                tableOrderDO.setEvaluateStars(stars);
                 tableOrderDO.setEvaluateTime(date);
                 tableOrderDO.setEndTime(date);
                 tableOrderDO.setLatestUpdateTime(date);

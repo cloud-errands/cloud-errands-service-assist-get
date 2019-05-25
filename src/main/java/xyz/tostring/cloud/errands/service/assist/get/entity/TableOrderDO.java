@@ -42,6 +42,8 @@ public class TableOrderDO {
     @Column
     private String evaluateContent;
     @Column
+    private Integer evaluateStars;
+    @Column
     private Date createTime;
     @Column
     private Date closeTime;
@@ -188,6 +190,14 @@ public class TableOrderDO {
 
     public void setEvaluateContent(String evaluateContent) {
         this.evaluateContent = evaluateContent;
+    }
+
+    public Integer getEvaluateStars() {
+        return evaluateStars;
+    }
+
+    public void setEvaluateStars(Integer evaluateStars) {
+        this.evaluateStars = evaluateStars;
     }
 
     public Date getCreateTime() {

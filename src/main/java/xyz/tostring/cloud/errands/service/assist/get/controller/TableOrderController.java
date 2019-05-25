@@ -57,9 +57,9 @@ public class TableOrderController {
 
     @CrossOrigin
     @PostMapping("evaluate")
-    public BaseResult evaluate(Long orderId, String content) {
+    public BaseResult evaluate(Long orderId, String content, Integer stars) {
         BaseResult baseResult = new BaseResult();
-        tableOrderService.evaluateOrder(orderId, content);
+        tableOrderService.evaluateOrder(orderId, content, stars);
         return baseResult.ok();
     }
 
